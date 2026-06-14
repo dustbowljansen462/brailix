@@ -1,7 +1,12 @@
+import json
+from dataclasses import dataclass, field
+from typing import ClassVar
+
 import pytest
 
 from brailix.core.span import Span
 from brailix.ir.document import (
+    Block,
     CodeBlock,
     DocumentIR,
     Footnote,
@@ -198,6 +203,40 @@ class TestTypedChildValidation:
         with pytest.raises(TypeError, match="TableCell"):
             block_from_dict(payload)
 
+    def test_block_children_with_block_entry_raises_on_to_dict(self):
+        # ``children`` is typed list[InlineNode]; a structural Block (e.g.
+        # ListItem) belongs in items/cells/rows. to_dict can serialise a
+        # block child (every Block has to_dict), but block_from_dict rebuilds
+        # children via the *inline* registry and would KeyError on the block
+        # tag — to_dict/from_dict would not be inverses. Reject at the source
+        # so the breakage surfaces where the bad tree is built, not on reload.
+        p = Paragraph(children=[ListItem(text="wrong")])
+        with pytest.raises(TypeError, match="InlineNode"):
+            p.to_dict()
+
+
+class TestBaseToDictSelfConsistency:
+    """The generic ``Block.to_dict`` loop must never emit a raw IR object: a
+    subclass that adds a structural field but forgets to override ``to_dict``
+    drops that field instead of producing a payload that explodes at
+    ``json.dumps``. The shipped containers (List/Table/TableRow) override
+    ``to_dict`` and so still emit their structural children."""
+
+    def test_unoverridden_subclass_drops_raw_ir_field(self):
+        @dataclass(slots=True)
+        class _Weird(Block):
+            type: ClassVar[str] = "weird"
+            kids: list = field(default_factory=list)
+
+        d = _Weird(kids=[ListItem(text="x")]).to_dict()
+        assert "kids" not in d  # skipped, not emitted as a raw ListItem
+        json.dumps(d)  # and the payload stays JSON-native
+
+    def test_overridden_container_still_emits_and_is_json_native(self):
+        d = List(items=[ListItem(text="a")]).to_dict()
+        assert [it["text"] for it in d["items"]] == ["a"]
+        json.dumps(d)
+
 
 class TestSerializationAllBlocks:
     @pytest.mark.parametrize(
@@ -356,3 +395,9 @@ class TestRegistry:
     def test_block_from_dict_ignores_unknown_fields(self):
         b = block_from_dict({"type": "paragraph", "text": "x", "future": "y"})
         assert isinstance(b, Paragraph)
+
+    def test_block_from_dict_rejects_malformed_span(self):
+        # Block spans share the canonical Span.from_tuple boundary — a malformed
+        # length raises rather than being stored raw as a list.
+        with pytest.raises(ValueError):
+            block_from_dict({"type": "paragraph", "text": "x", "span": [0, 1, 2]})

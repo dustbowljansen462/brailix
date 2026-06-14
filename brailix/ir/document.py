@@ -13,7 +13,7 @@ from dataclasses import dataclass, field, fields
 from typing import Any, ClassVar
 
 from brailix.core.span import Span
-from brailix.ir.inline import InlineNode
+from brailix.ir.inline import InlineNode, _is_omittable
 from brailix.ir.inline import from_dict as inline_from_dict
 
 # ---------------------------------------------------------------------------
@@ -47,23 +47,50 @@ class Block:
             if f.name in ("id", "children", "text", "span"):
                 continue
             value = getattr(self, f.name)
-            default = f.default
-            if (
-                value is None
-                or value == default
-                # default_factory fields have default == MISSING, so skip
-                # any empty sequence (e.g. List.items / table rows) too.
-                or (isinstance(value, (list, tuple)) and not value)
-            ):
+            # Omit defaults / empties (shared with inline to_dict); and never
+            # emit a raw IR object — structural fields (List.items / Table.rows
+            # / TableRow.cells) are serialised by the owning subclass override,
+            # so a forgotten override drops the field loudly-testably rather
+            # than producing a payload that only explodes at json.dumps time.
+            if _is_omittable(value, f.default) or _is_ir_payload(value):
                 continue
             d[f.name] = value
         if self.text is not None:
             d["text"] = self.text
         if self.children:
+            for c in self.children:
+                if not isinstance(c, InlineNode):
+                    raise TypeError(
+                        f"{type(self).__name__}.children expects InlineNode "
+                        f"entries; got {type(c).__name__}. Structural children "
+                        f"belong in items / cells / rows, not children — "
+                        f"block_from_dict rebuilds children via the inline "
+                        f"registry and cannot round-trip a block tag."
+                    )
             d["children"] = [c.to_dict() for c in self.children]
         if self.span is not None:
             d["span"] = list(self.span.to_tuple())
         return d
+
+
+def _is_ir_payload(value: Any) -> bool:
+    """True if ``value`` is an IR node (:class:`Block` / :class:`InlineNode`)
+    or a sequence containing one.
+
+    These are the fields the generic :meth:`Block.to_dict` loop must not emit
+    raw: the structural containers (``List.items`` / ``Table.rows`` /
+    ``TableRow.cells``) are serialised by each subclass's ``to_dict`` override,
+    and inline ``children`` go through a dedicated path. Skipping IR payloads
+    keeps the base loop limited to JSON-native scalars, so a subclass that adds
+    a structural field but forgets to override ``to_dict`` drops it (caught by a
+    round-trip test) rather than emitting an object that only blows up later at
+    ``json.dumps``.
+    """
+    if isinstance(value, (Block, InlineNode)):
+        return True
+    if isinstance(value, (list, tuple)):
+        return any(isinstance(v, (Block, InlineNode)) for v in value)
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -280,8 +307,8 @@ def _deserialize_block_value(cls: type[Block], key: str, value: Any) -> Any:
     the parent field and the offending entry's type tag so the
     serializer / authoring tool can be fixed at the source.
     """
-    if key == "span" and isinstance(value, (list, tuple)) and len(value) == 2:
-        return Span(int(value[0]), int(value[1]))
+    if key == "span":
+        return None if value is None else Span.from_tuple(value)
     if key == "children" and isinstance(value, list):
         return [inline_from_dict(v) for v in value]
     if key == "items" and isinstance(value, list):

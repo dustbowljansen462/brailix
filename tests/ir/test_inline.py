@@ -5,6 +5,8 @@ import pytest
 from brailix.core.span import Span
 from brailix.ir.inline import (
     ChineseToken,
+    CodeInline,
+    Connector,
     Date,
     HanziChar,
     HanziMarker,
@@ -430,6 +432,8 @@ class TestAllTypesRoundTrip:
             LatinWord(surface="hello"),
             LatinAcronym(surface="CPU"),
             Space(surface=" "),
+            Connector(surface=""),
+            CodeInline(surface="x = 1"),
             Unknown(surface="??", reason="bad"),
             MathInline(surface="x^2", source="latex"),
             MusicInline(surface="do re mi", source="plain"),
@@ -520,3 +524,16 @@ class TestSerializeValueHelper:
     def test_inline_node_delegates_to_to_dict(self):
         node = Number(surface="42")
         assert _serialize_value(node) == node.to_dict()
+
+
+class TestMalformedSpan:
+    def test_from_dict_rejects_malformed_span(self):
+        # A span round-trips as a 2-element list; a 3-element one is malformed
+        # and must raise at the IR boundary, not be stored raw as a list.
+        with pytest.raises(ValueError):
+            from_dict({"type": "number", "surface": "1", "span": [0, 1, 2]})
+
+    def test_from_dict_accepts_explicit_none_span(self):
+        # An explicit null span is allowed (to_dict omits it, from_dict keeps None).
+        node = from_dict({"type": "number", "surface": "1", "span": None})
+        assert node.span is None
